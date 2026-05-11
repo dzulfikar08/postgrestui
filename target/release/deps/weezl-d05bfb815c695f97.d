@@ -1,0 +1,10 @@
+/Users/macbookpro/Documents/JoyoDigitama/postgrestui/target/release/deps/weezl-d05bfb815c695f97.d: /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/weezl-0.1.12/src/lib.rs /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/weezl-0.1.12/src/decode.rs /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/weezl-0.1.12/src/encode.rs /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/weezl-0.1.12/src/error.rs
+
+/Users/macbookpro/Documents/JoyoDigitama/postgrestui/target/release/deps/libweezl-d05bfb815c695f97.rlib: /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/weezl-0.1.12/src/lib.rs /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/weezl-0.1.12/src/decode.rs /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/weezl-0.1.12/src/encode.rs /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/weezl-0.1.12/src/error.rs
+
+/Users/macbookpro/Documents/JoyoDigitama/postgrestui/target/release/deps/libweezl-d05bfb815c695f97.rmeta: /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/weezl-0.1.12/src/lib.rs /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/weezl-0.1.12/src/decode.rs /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/weezl-0.1.12/src/encode.rs /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/weezl-0.1.12/src/error.rs
+
+/Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/weezl-0.1.12/src/lib.rs:
+/Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/weezl-0.1.12/src/decode.rs:
+/Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/weezl-0.1.12/src/encode.rs:
+/Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/weezl-0.1.12/src/error.rs:

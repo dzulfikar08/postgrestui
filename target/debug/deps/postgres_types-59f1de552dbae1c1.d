@@ -1,0 +1,9 @@
+/Users/macbookpro/Documents/JoyoDigitama/postgrestui/target/debug/deps/postgres_types-59f1de552dbae1c1.d: /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postgres-types-0.2.13/src/lib.rs /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postgres-types-0.2.13/src/pg_lsn.rs /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postgres-types-0.2.13/src/private.rs /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postgres-types-0.2.13/src/special.rs /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postgres-types-0.2.13/src/type_gen.rs
+
+/Users/macbookpro/Documents/JoyoDigitama/postgrestui/target/debug/deps/libpostgres_types-59f1de552dbae1c1.rmeta: /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postgres-types-0.2.13/src/lib.rs /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postgres-types-0.2.13/src/pg_lsn.rs /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postgres-types-0.2.13/src/private.rs /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postgres-types-0.2.13/src/special.rs /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postgres-types-0.2.13/src/type_gen.rs
+
+/Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postgres-types-0.2.13/src/lib.rs:
+/Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postgres-types-0.2.13/src/pg_lsn.rs:
+/Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postgres-types-0.2.13/src/private.rs:
+/Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postgres-types-0.2.13/src/special.rs:
+/Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postgres-types-0.2.13/src/type_gen.rs:

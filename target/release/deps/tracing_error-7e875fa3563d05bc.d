@@ -1,0 +1,10 @@
+/Users/macbookpro/Documents/JoyoDigitama/postgrestui/target/release/deps/tracing_error-7e875fa3563d05bc.d: /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tracing-error-0.2.1/src/lib.rs /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tracing-error-0.2.1/src/backtrace.rs /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tracing-error-0.2.1/src/error.rs /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tracing-error-0.2.1/src/layer.rs
+
+/Users/macbookpro/Documents/JoyoDigitama/postgrestui/target/release/deps/libtracing_error-7e875fa3563d05bc.rlib: /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tracing-error-0.2.1/src/lib.rs /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tracing-error-0.2.1/src/backtrace.rs /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tracing-error-0.2.1/src/error.rs /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tracing-error-0.2.1/src/layer.rs
+
+/Users/macbookpro/Documents/JoyoDigitama/postgrestui/target/release/deps/libtracing_error-7e875fa3563d05bc.rmeta: /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tracing-error-0.2.1/src/lib.rs /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tracing-error-0.2.1/src/backtrace.rs /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tracing-error-0.2.1/src/error.rs /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tracing-error-0.2.1/src/layer.rs
+
+/Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tracing-error-0.2.1/src/lib.rs:
+/Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tracing-error-0.2.1/src/backtrace.rs:
+/Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tracing-error-0.2.1/src/error.rs:
+/Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tracing-error-0.2.1/src/layer.rs:

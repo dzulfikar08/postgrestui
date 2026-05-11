@@ -1,0 +1,14 @@
+/Users/macbookpro/Documents/JoyoDigitama/postgrestui/target/release/deps/serde-df4da0c82432ec46.d: /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/macbookpro/Documents/JoyoDigitama/postgrestui/target/release/build/serde-607bdaf9665f5ae9/out/private.rs
+
+/Users/macbookpro/Documents/JoyoDigitama/postgrestui/target/release/deps/libserde-df4da0c82432ec46.rlib: /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/macbookpro/Documents/JoyoDigitama/postgrestui/target/release/build/serde-607bdaf9665f5ae9/out/private.rs
+
+/Users/macbookpro/Documents/JoyoDigitama/postgrestui/target/release/deps/libserde-df4da0c82432ec46.rmeta: /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/macbookpro/Documents/JoyoDigitama/postgrestui/target/release/build/serde-607bdaf9665f5ae9/out/private.rs
+
+/Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs:
+/Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs:
+/Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs:
+/Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs:
+/Users/macbookpro/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs:
+/Users/macbookpro/Documents/JoyoDigitama/postgrestui/target/release/build/serde-607bdaf9665f5ae9/out/private.rs:
+
+# env-dep:OUT_DIR=/Users/macbookpro/Documents/JoyoDigitama/postgrestui/target/release/build/serde-607bdaf9665f5ae9/out

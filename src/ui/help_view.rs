@@ -1,0 +1,83 @@
+use crate::ui::{PRIMARY_COLOR, SECONDARY_COLOR, TEXT_COLOR};
+use ratatui::{
+    layout::{Constraint, Layout, Rect},
+    style::Stylize,
+    text::Line,
+    widgets::{Block, BorderType, Clear, Row, Table},
+    Frame,
+};
+
+use super::utils::center;
+
+const TITLE: &str = " HELP ";
+
+const NAV_LIST_TITLE: &str = " Navigation List (Left side) ";
+const NAV_LIST_KEYS: [[&str; 2]; 3] = [
+    ["Show Tables - Views", "q - e"],
+    ["Navigate", "↑↓"],
+    ["Search Filter", "/"],
+];
+
+const TABLE_VIEW_TITLE: &str = " Table View ";
+const TABLE_KEYS: [[&str; 2]; 12] = [
+    ["View Schema - Browse - Query", "H / L / ;"],
+    ["Page Up (prev page)", "u"],
+    ["Page Down (next page)", "d"],
+    ["Scroll Up / Down", "i / k"],
+    ["Scroll Left / Right", "j / l"],
+    ["Yank Cell to Clipboard", "y"],
+    ["Search Table List", "/"],
+    ["Run SQL Query (in Query tab)", "Ctrl+S"],
+    ["Accept Autocomplete", "Tab / Enter"],
+    ["Back to Browse", "Esc"],
+    ["Quit", "Ctrl+Q"],
+    ["Help", "?"],
+];
+
+const GENERAL_TITLE: &str = " General ";
+const GENERAL_KEYS: [[&str; 2]; 2] = [
+    ["Quit Application", "Ctrl+Q"],
+    ["Help Menu Open/Close", "?"],
+];
+
+pub fn draw_help_window(frame: &mut Frame, lay: Rect) {
+    let background = Block::bordered()
+        .title(Line::from(TITLE).fg(SECONDARY_COLOR).bold().centered())
+        .fg(PRIMARY_COLOR)
+        .border_type(BorderType::Rounded);
+    frame.render_widget(Clear, lay);
+    frame.render_widget(background, lay);
+
+    let area = center(lay, Constraint::Length(60), Constraint::Length(60));
+    let split_area = Layout::vertical(Constraint::from_lengths([4, 14, 3]))
+        .margin(2)
+        .split(area);
+    let widths = Constraint::from_lengths([40, 14]);
+
+    let nav_list_table = set_style(
+        Table::new(NAV_LIST_KEYS.map(|x| Row::new(x).fg(TEXT_COLOR)), &widths),
+        NAV_LIST_TITLE,
+    );
+    frame.render_widget(nav_list_table, split_area[0]);
+
+    let table_view_table = set_style(
+        Table::new(TABLE_KEYS.map(|x| Row::new(x).fg(TEXT_COLOR)), &widths),
+        TABLE_VIEW_TITLE,
+    );
+    frame.render_widget(table_view_table, split_area[1]);
+
+    let general_table = set_style(
+        Table::new(GENERAL_KEYS.map(|x| Row::new(x).fg(TEXT_COLOR)), &widths),
+        GENERAL_TITLE,
+    );
+    frame.render_widget(general_table, split_area[2]);
+}
+
+fn set_style<'a>(t: Table<'a>, title: &'a str) -> Table<'a> {
+    t.fg(TEXT_COLOR).block(
+        Block::bordered()
+            .fg(PRIMARY_COLOR)
+            .border_type(BorderType::Rounded)
+            .title(title.fg(SECONDARY_COLOR).bold()),
+    )
+}
