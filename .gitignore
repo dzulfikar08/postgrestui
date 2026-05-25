@@ -1,4 +1,5 @@
 /target/
+/scripts/
 *.zip
 *.tar.gz
 postgrestui-v*
