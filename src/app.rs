@@ -148,20 +148,202 @@ impl App {
     pub async fn execute_sql(
         &self,
         sql: &str,
-    ) -> Result<(Vec<String>, Vec<Vec<CellType>>), Box<dyn std::error::Error>> {
+    ) -> Result<Vec<(Vec<String>, Vec<Vec<CellType>>)>, Box<dyn std::error::Error>> {
         let sql_trimmed = sql.trim();
         if sql_trimmed.is_empty() {
-            return Ok((Vec::new(), Vec::new()));
+            return Ok(Vec::new());
         }
         let client = self.get_connection().await?;
-        let rows = client.query(sql_trimmed, &[]).await?;
-        let cols: Vec<String> = rows
-            .first()
-            .map(|r| r.columns().iter().map(|c| c.name().to_string()).collect())
-            .unwrap_or_default();
-        let data: Vec<Vec<CellType>> = rows.iter().map(|r| map_row(&cols, r)).collect();
-        Ok((cols, data))
+        let stmts = split_sql(sql_trimmed);
+
+        if stmts.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        let total = stmts.len();
+        let mut results: Vec<(Vec<String>, Vec<Vec<CellType>>)> = Vec::new();
+
+        for (i, stmt) in stmts.iter().enumerate() {
+            let rows = match client.query(stmt, &[]).await {
+                Ok(rows) => rows,
+                Err(e) => {
+                    let snippet: String = stmt.chars().take(120).collect();
+                    return Err(format!(
+                        "Statement {}/{} failed:\n---\n{}...\n---\n{}",
+                        i + 1,
+                        total,
+                        snippet,
+                        e,
+                    )
+                    .into());
+                }
+            };
+            let cols: Vec<String> = rows
+                .first()
+                .map(|r| r.columns().iter().map(|c| c.name().to_string()).collect())
+                .unwrap_or_default();
+            let data: Vec<Vec<CellType>> = rows.iter().map(|r| map_row(&cols, r)).collect();
+            results.push((cols, data));
+        }
+
+        Ok(results)
     }
+
+    pub async fn execute_script(
+        &self,
+        sql: &str,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let sql_trimmed = sql.trim();
+        if sql_trimmed.is_empty() {
+            return Ok(());
+        }
+        let client = self.get_connection().await?;
+        let stmts = split_sql(sql_trimmed);
+        if stmts.is_empty() {
+            return Ok(());
+        }
+        let total = stmts.len();
+        for (i, stmt) in stmts.iter().enumerate() {
+            if let Err(e) = client.execute(stmt, &[]).await {
+                let snippet: String = stmt.chars().take(120).collect();
+                return Err(format!(
+                    "Statement {}/{} failed:\n---\n{}...\n---\n{}",
+                    i + 1,
+                    total,
+                    snippet,
+                    e,
+                )
+                .into());
+            }
+        }
+        Ok(())
+    }
+}
+
+fn split_sql(sql: &str) -> Vec<String> {
+    let mut statements: Vec<String> = Vec::new();
+    let mut cur: Vec<char> = Vec::new();
+    let s: Vec<char> = sql.chars().collect();
+    let len = s.len();
+    let mut i = 0;
+
+    while i < len {
+        let c = s[i];
+
+        if c == '\'' {
+            cur.push(c);
+            i += 1;
+            while i < len {
+                cur.push(s[i]);
+                if s[i] == '\'' {
+                    if i + 1 < len && s[i + 1] == '\'' {
+                        i += 1;
+                        cur.push(s[i]);
+                    } else {
+                        i += 1;
+                        break;
+                    }
+                }
+                i += 1;
+            }
+            continue;
+        }
+
+        if c == '"' {
+            cur.push(c);
+            i += 1;
+            while i < len {
+                cur.push(s[i]);
+                if s[i] == '"' {
+                    i += 1;
+                    break;
+                }
+                i += 1;
+            }
+            continue;
+        }
+
+        if c == '-' && i + 1 < len && s[i + 1] == '-' {
+            cur.push('-');
+            cur.push('-');
+            i += 2;
+            while i < len && s[i] != '\n' {
+                cur.push(s[i]);
+                i += 1;
+            }
+            continue;
+        }
+
+        if c == '/' && i + 1 < len && s[i + 1] == '*' {
+            cur.push('/');
+            cur.push('*');
+            i += 2;
+            while i < len {
+                cur.push(s[i]);
+                if s[i] == '*' && i + 1 < len && s[i + 1] == '/' {
+                    i += 1;
+                    cur.push(s[i]);
+                    i += 1;
+                    break;
+                }
+                i += 1;
+            }
+            continue;
+        }
+
+        if c == '$' {
+            cur.push('$');
+            i += 1;
+            let mut tag: Vec<char> = Vec::new();
+            while i < len && s[i] != '$' {
+                tag.push(s[i]);
+                cur.push(s[i]);
+                i += 1;
+            }
+            if i < len && s[i] == '$' {
+                cur.push('$');
+                i += 1;
+                let close: String = {
+                    let mut m = String::from("$");
+                    m.extend(tag.iter());
+                    m.push('$');
+                    m
+                };
+                let close_chars: Vec<char> = close.chars().collect();
+                let cc = close_chars.len();
+                'find: while i < len {
+                    if i + cc <= len && s[i..i + cc] == close_chars[..] {
+                        cur.extend(&close_chars);
+                        i += cc;
+                        break 'find;
+                    }
+                    cur.push(s[i]);
+                    i += 1;
+                }
+            }
+            continue;
+        }
+
+        if c == ';' {
+            let trimmed: String = cur.iter().collect();
+            if !trimmed.trim().is_empty() {
+                statements.push(trimmed);
+            }
+            cur.clear();
+            i += 1;
+            continue;
+        }
+
+        cur.push(c);
+        i += 1;
+    }
+
+    let trimmed: String = cur.iter().collect();
+    if !trimmed.trim().is_empty() {
+        statements.push(trimmed);
+    }
+
+    statements
 }
 
 fn map_row(cols: &[String], row: &Row) -> Vec<CellType> {

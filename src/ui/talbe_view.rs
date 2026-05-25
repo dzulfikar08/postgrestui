@@ -11,7 +11,7 @@ use ratatui::{
     layout::{Constraint, Layout, Rect},
     style::{Color, Style, Stylize},
     symbols,
-    text::Line,
+    text::{Line, Text},
     widgets::{
         Block, BorderType, Borders, Cell, Padding, Paragraph, Row, Scrollbar,
         ScrollbarOrientation, ScrollbarState, Table, TableState, Tabs, Widget, Wrap,
@@ -256,8 +256,10 @@ pub struct TableView {
     search_mode: bool,
     filtered_list: StringList,
     sql_input: String,
-    sql_result: Option<(Vec<String>, Vec<Vec<CellType>>)>,
+    sql_result: Option<Vec<(Vec<String>, Vec<Vec<CellType>>)>>,
     sql_error: Option<String>,
+    script_message: Option<String>,
+    selected_result: usize,
     copy_menu_open: bool,
     copy_menu_state: ratatui::widgets::ListState,
     suggestions: Vec<String>,
@@ -289,6 +291,8 @@ impl Default for TableView {
             sql_input: String::new(),
             sql_result: None,
             sql_error: None,
+            script_message: None,
+            selected_result: 0,
             copy_menu_open: false,
             copy_menu_state: ratatui::widgets::ListState::default(),
             suggestions: Vec::new(),
@@ -359,6 +363,7 @@ impl TableView {
         self.sql_input.clear();
         self.sql_result = None;
         self.sql_error = None;
+        self.script_message = None;
     }
 
     fn is_searching(&self) -> bool {
@@ -751,7 +756,7 @@ impl TableView {
     }
 
     fn draw_query(&mut self, frame: &mut Frame, area: Rect) {
-        let areas = Layout::vertical([Constraint::Length(5), Constraint::Fill(1)])
+        let areas = Layout::vertical([Constraint::Length(12), Constraint::Fill(1)])
             .margin(2)
             .split(area);
         let input_area = areas[0];
@@ -760,23 +765,35 @@ impl TableView {
         let input_title = Line::from(vec![
             " SQL ".fg(SECONDARY_COLOR).bold(),
             " Ctrl+S run ".fg(DIM_COLOR),
-            " Tab accept ".fg(DIM_COLOR),
+            " Enter newline ".fg(DIM_COLOR),
         ])
         .left_aligned();
-        let input_text = if self.sql_input.is_empty() {
-            Line::from(vec!["SELECT * FROM ...;".fg(DIM_COLOR)])
+        let input_text: Text<'static> = if self.sql_input.is_empty() {
+            Text::from(Line::from(vec!["SELECT * FROM ...;".fg(DIM_COLOR)]))
         } else {
-            let mut highlighted = highlight_sql(&self.sql_input);
-            highlighted.spans.push("█".fg(HIGHLIGHTED_COLOR));
-            highlighted
+            let lines: Vec<Line<'static>> = self
+                .sql_input
+                .split('\n')
+                .enumerate()
+                .map(|(i, line)| {
+                    let mut highlighted = highlight_sql(line);
+                    if i == self.sql_input.split('\n').count() - 1 {
+                        highlighted.spans.push("█".fg(HIGHLIGHTED_COLOR));
+                    }
+                    highlighted
+                })
+                .collect();
+            Text::from(lines)
         };
         frame.render_widget(
-            Paragraph::new(input_text).block(
-                Block::bordered()
-                    .border_type(BorderType::Rounded)
-                    .fg(PRIMARY_COLOR)
-                    .title(input_title),
-            ),
+            Paragraph::new(input_text)
+                .wrap(Wrap { trim: false })
+                .block(
+                    Block::bordered()
+                        .border_type(BorderType::Rounded)
+                        .fg(PRIMARY_COLOR)
+                        .title(input_title),
+                ),
             input_area,
         );
 
@@ -811,7 +828,17 @@ impl TableView {
             frame.render_widget(list, suggestion_area);
         }
 
-        if let Some(err) = &self.sql_error {
+        if let Some(msg) = &self.script_message {
+            let p = Paragraph::new(msg.as_str())
+                .fg(Color::Green)
+                .block(
+                    Block::bordered()
+                        .border_type(BorderType::Rounded)
+                        .fg(PRIMARY_COLOR)
+                        .title(" Result "),
+                );
+            frame.render_widget(p, result_area);
+        } else if let Some(err) = &self.sql_error {
             let p = Paragraph::new(err.as_str())
                 .fg(Color::Red)
                 .block(
@@ -821,8 +848,10 @@ impl TableView {
                         .title(" Error "),
                 );
             frame.render_widget(p, result_area);
-        } else if let Some(ref result) = self.sql_result {
-            let (columns, data) = result;
+        } else if let Some(ref all_results) = self.sql_result {
+            let total = all_results.len();
+            let idx = self.selected_result.min(total.saturating_sub(1));
+            let (columns, data) = &all_results[idx];
             let num_rows = data.len();
             let rn_width = if num_rows > 0 { format!("{}", num_rows).len() } else { 1 };
             let mut widths: Vec<usize> = vec![rn_width];
@@ -859,7 +888,13 @@ impl TableView {
                 Row::new(cells).style(row_style)
             }).collect();
             let constraints: Vec<Constraint> = widths.iter().map(|w| Constraint::Min(*w as u16)).collect();
+            let nav = if total > 1 {
+                format!(" ◀ {}/{} ▶ ", idx + 1, total)
+            } else {
+                String::new()
+            };
             let title = Line::from(vec![
+                nav.fg(HIGHLIGHTED_COLOR),
                 " Result ".fg(SECONDARY_COLOR).bold(),
                 format!("── {} rows · {} cols ", num_rows, columns.len()).fg(DIM_COLOR),
             ]).left_aligned();
@@ -1048,6 +1083,7 @@ impl TableView {
                         self.sql_input.clear();
                         self.sql_result = None;
                         self.sql_error = None;
+                        self.script_message = None;
                         self.selected_table_tab = SelectedTableTab::Browse;
                         self.load_table_data(app).await?;
                         return Ok(());
@@ -1061,6 +1097,10 @@ impl TableView {
                     KeyCode::Enter => {
                         if !self.suggestions.is_empty() {
                             self.apply_suggestion();
+                        } else {
+                            self.sql_input.push('\n');
+                            self.suggestions.clear();
+                            self.suggestion_selected = None;
                         }
                         return Ok(());
                     }
@@ -1088,6 +1128,22 @@ impl TableView {
                             return Ok(());
                         }
                     }
+                    KeyCode::Left | KeyCode::Char('[') => {
+                        if let Some(ref results) = self.sql_result {
+                            if results.len() > 1 && self.selected_result > 0 {
+                                self.selected_result -= 1;
+                            }
+                        }
+                        return Ok(());
+                    }
+                    KeyCode::Right | KeyCode::Char(']') => {
+                        if let Some(ref results) = self.sql_result {
+                            if self.selected_result + 1 < results.len() {
+                                self.selected_result += 1;
+                            }
+                        }
+                        return Ok(());
+                    }
                     KeyCode::Backspace => {
                         self.sql_input.pop();
                         self.update_suggestions();
@@ -1095,6 +1151,8 @@ impl TableView {
                     }
                     KeyCode::Char('u') if key.modifiers.contains(crossterm::event::KeyModifiers::CONTROL) => {
                         self.sql_input.clear();
+                        self.sql_result = None;
+                        self.script_message = None;
                         self.update_suggestions();
                         return Ok(());
                     }
@@ -1184,9 +1242,17 @@ impl TableView {
         if self.sql_input.trim().is_empty() {
             return;
         }
+        self.script_message = None;
+        self.selected_result = 0;
         match app.execute_sql(&self.sql_input).await {
-            Ok(result) => {
-                self.sql_result = Some(result);
+            Ok(results) => {
+                let has_data = results.iter().any(|(cols, rows)| !cols.is_empty() || !rows.is_empty());
+                if has_data {
+                    self.sql_result = Some(results);
+                } else {
+                    self.script_message = Some("Script executed successfully.".to_string());
+                    self.sql_result = None;
+                }
                 self.sql_error = None;
             }
             Err(e) => {
