@@ -1376,7 +1376,7 @@ dependencies = [
 
 [[package]]
 name = "postgrestui"
-version = "0.1.2"
+version = "0.2.0"
 dependencies = [
  "arboard",
  "axum",
