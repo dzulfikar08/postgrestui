@@ -3,3 +3,8 @@
 *.zip
 *.tar.gz
 postgrestui-v*
+cloudflare-worker/
+
+# Web UI
+web/node_modules/
+web/dist/
