@@ -121,3 +121,7 @@ Builds for macOS (ARM + Intel), Linux (x86_64), and Windows (x86_64) using `carg
 ## License
 
 [GPL-3.0](LICENSE) — free to build from source. Paid pre-built binaries support continued development and are available at [voltrus.id/postgrestui](https://voltrus.id/postgrestui/).
+
+## Sponsor
+
+This project is sponsored by [Voltrus.id](https://voltrus.id) and [JoyoDigitama.com](https://joyodigitama.com).
