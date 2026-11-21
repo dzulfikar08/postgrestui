@@ -16,6 +16,10 @@ A fast, lightweight PostgreSQL database browser with a terminal UI and built-in 
 - **Multi-Format Export** — CSV (Excel-ready), JSON (API-ready), SQL INSERT statements.
 - **Single Binary** — ~5 MB, zero runtime dependencies. macOS, Linux, Windows.
 
+## Screenshot
+
+![postgrestui](assets/screenshot.png)
+
 ## Quick Start
 
 ### Install from source
