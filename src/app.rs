@@ -1,5 +1,5 @@
 use serde::Serialize;
-use tokio_postgres::{NoTls, Row};
+use tokio_postgres::{Client, NoTls, SimpleQueryMessage};
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub enum CellType {
@@ -118,13 +118,7 @@ impl App {
         let client = self.get_connection().await?;
         let quoted = format!("\"{}\".\"{}\"", table.schema, table.name);
         let sql = format!("SELECT * FROM {}", quoted);
-        let rows = client.query(&sql, &[]).await?;
-        let cols: Vec<String> = rows
-            .first()
-            .map(|r| r.columns().iter().map(|c| c.name().to_string()).collect())
-            .unwrap_or_default();
-        let data: Vec<Vec<CellType>> = rows.iter().map(|r| map_row(&cols, r)).collect();
-        Ok((cols, data))
+        Ok(text_query(&client, &sql).await?)
     }
 
     pub async fn select_page(
@@ -136,13 +130,7 @@ impl App {
         let client = self.get_connection().await?;
         let quoted = format!("\"{}\".\"{}\"", table.schema, table.name);
         let sql = format!("SELECT * FROM {} LIMIT {} OFFSET {}", quoted, limit, offset);
-        let rows = client.query(&sql, &[]).await?;
-        let cols: Vec<String> = rows
-            .first()
-            .map(|r| r.columns().iter().map(|c| c.name().to_string()).collect())
-            .unwrap_or_default();
-        let data: Vec<Vec<CellType>> = rows.iter().map(|r| map_row(&cols, r)).collect();
-        Ok((cols, data))
+        Ok(text_query(&client, &sql).await?)
     }
 
     pub async fn execute_sql(
@@ -164,8 +152,8 @@ impl App {
         let mut results: Vec<(Vec<String>, Vec<Vec<CellType>>)> = Vec::new();
 
         for (i, stmt) in stmts.iter().enumerate() {
-            let rows = match client.query(stmt, &[]).await {
-                Ok(rows) => rows,
+            let result = match text_query(&client, stmt).await {
+                Ok(result) => result,
                 Err(e) => {
                     let snippet: String = stmt.chars().take(120).collect();
                     return Err(format!(
@@ -178,12 +166,7 @@ impl App {
                     .into());
                 }
             };
-            let cols: Vec<String> = rows
-                .first()
-                .map(|r| r.columns().iter().map(|c| c.name().to_string()).collect())
-                .unwrap_or_default();
-            let data: Vec<Vec<CellType>> = rows.iter().map(|r| map_row(&cols, r)).collect();
-            results.push((cols, data));
+            results.push(result);
         }
 
         Ok(results)
@@ -346,41 +329,38 @@ fn split_sql(sql: &str) -> Vec<String> {
     statements
 }
 
-fn map_row(cols: &[String], row: &Row) -> Vec<CellType> {
-    let mut data: Vec<CellType> = Vec::new();
-    for i in 0..cols.len() {
-        let cell = map_cell(row, i);
-        data.push(cell);
+/// Run one statement over the simple query protocol, which returns every value as
+/// Postgres's own text output. Values of any type (numeric, timestamptz, uuid, json,
+/// arrays, intervals...) display as psql would show them; only SQL NULL is Null.
+/// The binary protocol needed a Rust type per column and showed unmapped types as null.
+async fn text_query(
+    client: &Client,
+    sql: &str,
+) -> Result<(Vec<String>, Vec<Vec<CellType>>), tokio_postgres::Error> {
+    let mut cols: Vec<String> = Vec::new();
+    let mut data: Vec<Vec<CellType>> = Vec::new();
+    for msg in client.simple_query(sql).await? {
+        match msg {
+            SimpleQueryMessage::RowDescription(desc) => {
+                cols = desc.iter().map(|c| c.name().to_string()).collect();
+            }
+            SimpleQueryMessage::Row(row) => {
+                if cols.is_empty() {
+                    cols = row.columns().iter().map(|c| c.name().to_string()).collect();
+                }
+                data.push(
+                    (0..row.len())
+                        .map(|i| match row.get(i) {
+                            Some(v) => CellType::Text(v.to_string()),
+                            None => CellType::Null,
+                        })
+                        .collect(),
+                );
+            }
+            _ => {}
+        }
     }
-    data
-}
-
-fn map_cell(row: &Row, col_index: usize) -> CellType {
-    if let Ok(Some(s)) = row.try_get::<_, Option<&str>>(col_index) {
-        return CellType::Text(s.to_string());
-    }
-    if let Ok(Some(v)) = row.try_get::<_, Option<String>>(col_index) {
-        return CellType::Text(v);
-    }
-    if let Ok(Some(v)) = row.try_get::<_, Option<i32>>(col_index) {
-        return CellType::Text(v.to_string());
-    }
-    if let Ok(Some(v)) = row.try_get::<_, Option<i64>>(col_index) {
-        return CellType::Text(v.to_string());
-    }
-    if let Ok(Some(v)) = row.try_get::<_, Option<f32>>(col_index) {
-        return CellType::Text(v.to_string());
-    }
-    if let Ok(Some(v)) = row.try_get::<_, Option<f64>>(col_index) {
-        return CellType::Text(v.to_string());
-    }
-    if let Ok(Some(v)) = row.try_get::<_, Option<bool>>(col_index) {
-        return CellType::Text(v.to_string());
-    }
-    if let Ok(Some(_)) = row.try_get::<_, Option<&[u8]>>(col_index) {
-        return CellType::Blob;
-    }
-    CellType::Null
+    Ok((cols, data))
 }
 
 async fn count_rows(client: &tokio_postgres::Client, schema: &str, table_name: &str) -> usize {
@@ -434,4 +414,56 @@ async fn get_tables(client: &tokio_postgres::Client) -> Result<(Vec<Table>, Vec<
         }
     }
     Ok((tables, views))
+}
+
+#[cfg(test)]
+mod text_query_tests {
+    use super::*;
+
+    /// Needs a Postgres server: CI provides one through POSTGRES_TEST_URL; skipped without it.
+    #[tokio::test]
+    async fn every_type_renders_and_only_null_is_null() {
+        let Ok(url) = std::env::var("POSTGRES_TEST_URL") else {
+            eprintln!("POSTGRES_TEST_URL not set, skipping");
+            return;
+        };
+        let (client, conn) = tokio_postgres::connect(&url, NoTls).await.unwrap();
+        tokio::spawn(conn);
+        let (cols, rows) = text_query(
+            &client,
+            "SELECT 1234.50::numeric(10,2) AS total, -1.5::numeric AS neg, \
+             '2026-11-21 08:30:00+00'::timestamptz AT TIME ZONE 'UTC' AS ordered_at, \
+             '2026-11-21'::date AS day, '6a1f0c2e-9b3d-4f8a-a1b2-c3d4e5f60718'::uuid AS id, \
+             '{\"a\":1}'::jsonb AS doc, 7::smallint AS qty, NULL::numeric AS missing",
+        )
+        .await
+        .unwrap();
+        assert_eq!(cols, ["total", "neg", "ordered_at", "day", "id", "doc", "qty", "missing"]);
+        let shown: Vec<&str> = rows[0].iter().map(|c| c.display_text()).collect();
+        assert_eq!(
+            shown,
+            [
+                "1234.50",
+                "-1.5",
+                "2026-11-21 08:30:00",
+                "2026-11-21",
+                "6a1f0c2e-9b3d-4f8a-a1b2-c3d4e5f60718",
+                "{\"a\": 1}",
+                "7",
+                "null"
+            ]
+        );
+    }
+
+    #[tokio::test]
+    async fn empty_result_keeps_column_names() {
+        let Ok(url) = std::env::var("POSTGRES_TEST_URL") else {
+            return;
+        };
+        let (client, conn) = tokio_postgres::connect(&url, NoTls).await.unwrap();
+        tokio::spawn(conn);
+        let (cols, rows) = text_query(&client, "SELECT 1 AS a, 'x' AS b WHERE false").await.unwrap();
+        assert_eq!(cols, ["a", "b"]);
+        assert!(rows.is_empty());
+    }
 }

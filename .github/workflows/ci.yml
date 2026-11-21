@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      POSTGRES_TEST_URL: host=localhost user=postgres password=postgres dbname=postgres
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: System libraries
+        run: sudo apt-get update && sudo apt-get install -y libxcb1-dev libx11-dev libxkbcommon-dev
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Build web UI (embedded in the binary)
+        run: cd web && npm ci && npm run build
+      - run: cargo test --locked
